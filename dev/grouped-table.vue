@@ -2,6 +2,7 @@
 <div>
   <vue-good-table
     :columns="columns"
+    :enableColumnGrouping="true"
     :rows="rows"
     :line-numbers="true"
     :select-options="{enabled: true}"
@@ -37,24 +38,54 @@ export default {
     return {
       columns: [
         {
-          label: 'Name',
-          field: 'name',
-          filterOptions: {
-            enabled: true,
-          },
+          label: 'Group 1',
+          children: [
+            {
+              label: 'Name',
+              field: 'name',
+              filterOptions: {
+                enabled: true,
+              },
+            },
+            {
+              label: 'Diet',
+              field: 'diet',
+              type: 'text',
+            }
+          ]
         },
         {
-          label: 'Diet',
-          field: 'diet',
-          type: 'text',
-        },
-        {
-          label: 'Count',
-          field: 'count',
-          headerField: this.sumCount,
-          type: 'number',
+          label: 'Group 2',
+          children: [
+            {
+              label: 'Count',
+              field: 'count',
+              headerField: this.sumCount,
+              type: 'number',
+            },
+          ]
         },
       ],
+      // columns: [
+      //   {
+      //     label: 'Name',
+      //     field: 'name',
+      //     filterOptions: {
+      //       enabled: true,
+      //     },
+      //   },
+      //   {
+      //     label: 'Diet',
+      //     field: 'diet',
+      //     type: 'text',
+      //   },
+      //   {
+      //     label: 'Count',
+      //     field: 'count',
+      //     headerField: this.sumCount,
+      //     type: 'number',
+      //   },
+      // ],
       rows: [
         {
           label: 'Mammal Total',

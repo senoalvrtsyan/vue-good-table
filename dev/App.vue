@@ -12,6 +12,7 @@
       @on-sort-change="onSortChange"
       @on-page-change="onPageChange"
       :columns="columns"
+      :enableColumnGrouping="true"
       :rows="rows"
       theme="black-rhino"
       :fixed-header="true"
@@ -52,35 +53,45 @@ export default {
       searchTerm: '',
       columns: [
         {
-          label: 'Name',
-          field: 'name',
-          filterOptions: {
-            enabled: true,
-            trigger: 'enter',
-          },
+          label: 'Group 1',
+          children: [
+            {
+              label: 'Name',
+              field: 'name',
+              filterOptions: {
+                enabled: true,
+                trigger: 'enter',
+              },
+            },
+            {
+              label: 'Age',
+              field: 'age',
+              type: 'number',
+            },
+            {
+              label: 'Created On',
+              field: 'createdAt',
+              type: 'date',
+              dateInputFormat: 'YYYY-MM-DD',
+              dateOutputFormat: 'LLL',
+            },
+          ]
         },
         {
-          label: 'Age',
-          field: 'age',
-          type: 'number',
-        },
-        {
-          label: 'Created On',
-          field: 'createdAt',
-          type: 'date',
-          dateInputFormat: 'YYYY-MM-DD',
-          dateOutputFormat: 'LLL',
-        },
-        {
-          label: 'Percent',
-          field: 'score',
-          type: 'percentage',
-        },
-        {
-          label: 'Bool',
-          field: 'bool',
-          type: 'boolean',
-        },
+          label: 'Group 2',
+          children: [
+            {
+              label: 'Percent',
+              field: 'score',
+              type: 'percentage',
+            },
+            {
+              label: 'Bool',
+              field: 'bool',
+              type: 'boolean',
+            },
+          ]
+        }
       ],
       rows: [
         // { id:1, name:"John", age: 20, createdAt: '2018-02-18T00:00:43-05:00',score: 0.03343 },

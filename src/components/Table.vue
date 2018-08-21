@@ -69,7 +69,9 @@
           @on-toggle-select-all="toggleSelectAll"
           @on-sort-change="sort"
           @filter-changed="filterRows"
-          :columns="columns"
+          :columns="$props.enableColumnGrouping ? getchildColumns() : columns"
+          :enableColumnGrouping="$props.enableColumnGrouping"
+          :columnGroups="getColumnGroups()"
           :line-numbers="lineNumbers"
           :selectable="selectable"
           :all-selected="allSelected"
@@ -99,7 +101,9 @@
             @on-toggle-select-all="toggleSelectAll"
             @on-sort-change="sort"
             @filter-changed="filterRows"
-            :columns="columns"
+            :columnGroups="getColumnGroups()"
+            :columns="$props.enableColumnGrouping ? getchildColumns() : columns"
+            :enableColumnGrouping="$props.enableColumnGrouping"
             :line-numbers="lineNumbers"
             :selectable="selectable"
             :all-selected="allSelected"
@@ -164,7 +168,7 @@
               </th>
               <td
                 @click="onCellClicked(row, column, index, $event)"
-                v-for="(column, i) in columns"
+                v-for="(column, i) in childColumns"
                 :key="i"
                 :class="getClasses(i, 'td')"
                 v-if="!column.hidden && column.field">
@@ -286,6 +290,10 @@ export default {
     rtl: { default: false },
     rowStyleClass: { default: null, type: [Function, String] },
 
+    enableColumnGrouping: {
+      default: false,
+      type: Boolean
+    },
     groupOptions: {
       default() {
         return {
@@ -392,6 +400,7 @@ export default {
     forceSearch: false,
     sortChanged: false,
     dataTypes: dataTypes || {},
+    childColumns: {},
   }),
 
   watch: {
@@ -522,7 +531,7 @@ export default {
     },
 
     fullColspan() {
-      let fullColspan = this.columns.length;
+      let fullColspan = this.childColumns.length;
       if (this.lineNumbers) fullColspan++;
       if (this.selectable) fullColspan++;
       return fullColspan;
@@ -613,7 +622,7 @@ export default {
         });
         const filteredRows = [];
         each(allRows, (row) => {
-          each(this.columns, (col) => {
+          each(this.childColumns, (col) => {
             // if col does not have search disabled,
             if (!col.globalSearchDisabled) {
               // if a search function is provided,
@@ -675,21 +684,21 @@ export default {
 
         each(computedRows, (cRows) => {
           cRows.children.sort((x, y) => {
-            if (!this.columns[this.sortColumn]) return 0;
+            if (!this.childColumns[this.sortColumn]) return 0;
 
-            const xvalue = this.collect(x, this.columns[this.sortColumn].field);
-            const yvalue = this.collect(y, this.columns[this.sortColumn].field);
+            const xvalue = this.collect(x, this.childColumns[this.sortColumn].field);
+            const yvalue = this.collect(y, this.childColumns[this.sortColumn].field);
 
             // if user has provided a custom sort, use that instead of
             // built-in sort
-            const { sortFn } = this.columns[this.sortColumn];
+            const { sortFn } = this.childColumns[this.sortColumn];
             if (sortFn && typeof sortFn === 'function') {
-              return sortFn(xvalue, yvalue, this.columns[this.sortColumn], x, y) * (this.sortType === 'desc' ? -1 : 1);
+              return sortFn(xvalue, yvalue, this.childColumns[this.sortColumn], x, y) * (this.sortType === 'desc' ? -1 : 1);
             }
 
             // built in sort
             const { typeDef } = this.typedColumns[this.sortColumn];
-            return typeDef.compare(xvalue, yvalue, this.columns[this.sortColumn])
+            return typeDef.compare(xvalue, yvalue, this.childColumns[this.sortColumn])
               * (this.sortType === 'desc' ? -1 : 1);
           });
         });
@@ -778,8 +787,8 @@ export default {
     },
 
     typedColumns() {
-      const columns = assign(this.columns, []);
-      for (let i = 0; i < this.columns.length; i++) {
+      const columns = assign(this.childColumns, []);
+      for (let i = 0; i < this.childColumns.length; i++) {
         const column = columns[i];
         column.typeDef = this.dataTypes[column.type] || defaultType;
       }
@@ -792,6 +801,26 @@ export default {
   },
 
   methods: {
+    getColumnGroups(columns = this.columns) {
+      const columnsGroups = [];
+      columns.forEach(function(column){
+        if (column.children) {
+          columnsGroups.push({
+            label: column.label,
+            colSpan: column.children.length
+          });
+        }
+      });
+      return columnsGroups;
+    },
+    getchildColumns() {
+      const childColumns = [];
+      this.columns.forEach(column => {
+        childColumns.push(...column.children);
+      });
+      return childColumns;
+    },
+
     handleSearch() {
       this.resetTable();
       // for remote mode, we need to emit on-search
@@ -1049,7 +1078,7 @@ export default {
 
     // Check if a column is sortable.
     isSortableColumn(index) {
-      const { sortable } = this.columns[index];
+      const { sortable } = this.childColumns[index];
       const isSortable = typeof sortable === 'boolean' ? sortable : this.sortable;
       return isSortable;
     },
@@ -1175,8 +1204,8 @@ export default {
     // },
 
     handleDefaultSort() {
-      for (let index = 0; index < this.columns.length; index++) {
-        const col = this.columns[index];
+      for (let index = 0; index < this.childColumns.length; index++) {
+        const col = this.childColumns[index];
         if (col.field === this.defaultSortBy.field) {
           this.sortColumn = index;
           this.sortType = this.defaultSortBy.type || 'asc';
@@ -1348,7 +1377,9 @@ export default {
       }
     },
   },
-
+  created() {
+    this.childColumns = this.enableColumnGrouping ? this.getchildColumns() : this.columns;
+  },
   mounted() {
     if (this.perPage) {
       this.currentPerPage = this.perPage;

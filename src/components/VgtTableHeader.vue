@@ -1,5 +1,12 @@
 <template>
-<thead>
+  <thead >
+  <tr v-if="enableColumnGrouping" style="font-weight: bold" class="grouped-columns-header-row">
+    <th v-if="lineNumbers"></th>
+    <td v-if="selectable"></td>
+    <td v-for="group in columnGroups" :colspan="group.colSpan">
+      {{group.label}}
+    </td>
+  </tr>
   <tr>
     <th v-if="lineNumbers" class="line-numbers"></th>
     <th v-if="selectable" class="vgt-checkbox-col">
@@ -41,6 +48,10 @@ import VgtFilterRow from './VgtFilterRow.vue';
 export default {
   name: 'VgtTableHeader',
   props: {
+    enableColumnGrouping: {
+      default: false,
+      type: Boolean
+    },
     lineNumbers: {
       default: false,
       type: Boolean,
@@ -58,6 +69,9 @@ export default {
       type: Boolean,
     },
     columns: {
+      type: Array,
+    },
+    columnGroups: {
       type: Array,
     },
     mode: {
@@ -137,14 +151,9 @@ export default {
     },
 
     getWidthStyle(dom) {
-      if (window && window.getComputedStyle) {
-        const cellStyle = window.getComputedStyle(dom, null);
-        return {
-          width: cellStyle.width,
-        };
-      }
+      const cellStyle = window.getComputedStyle(dom, null);
       return {
-        width: 'auto',
+        width: cellStyle.width,
       };
     },
 
